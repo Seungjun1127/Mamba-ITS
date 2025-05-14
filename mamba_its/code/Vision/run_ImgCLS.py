@@ -20,8 +20,9 @@ from torchvision.transforms import (
     ToTensor,
 )
 
+from evaluate import load as load_metric
+
 from datasets import load_dataset
-from datasets import load_metric
 from datasets import Dataset, Image
 
 from Vision.load_data import get_data_split 
@@ -474,9 +475,9 @@ if __name__ == "__main__":
     model = args.model
     model_loader = AutoModelForImageClassification
     if model == "mamba": # default mamba
-        model_path = pass
+        model_path = "pass" # TBD
         model_loader = MambaForImageClassification
-        patch_size = pass
+        patch_size = 16 # TBD
         pretrained_data = "ImageNet-21k"
         pretrained_size = 224
     if model == "vit": # default vit

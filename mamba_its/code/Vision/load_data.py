@@ -8,10 +8,10 @@ import copy
 from itertools import chain
 import os
 
+from evaluate import load as load_metric
 from datasets import load_dataset
-from datasets import load_metric
 from datasets import Dataset, Image
-from nlp import concatenate_datasets
+from datasets import concatenate_datasets
 
 def load_image(Pdict_list, y, base_path, split_idx, dataset_prefix, missing_ratio, feature_removal_level):
     images_path = []
