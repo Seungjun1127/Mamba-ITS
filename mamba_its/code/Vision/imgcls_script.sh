@@ -4,7 +4,7 @@
 for dataset_prefix in differ_interpolation_-*0.5_**1_4*5_256*320_
 do
 CUDA_VISIBLE_DEVICES=0 python3 run_ImgCLS.py \
-    --model swin \
+    --model mamba \
     --seed 1799 \
     --save_total_limit 1 \
     --dataset PAM \

@@ -27,6 +27,7 @@ from datasets import Dataset, Image
 from Vision.load_data import get_data_split 
 from models.vit.modeling_vit import ViTForImageClassification
 from models.swin.modeling_swin import SwinForImageClassification
+from models.mamba.modeling_mamba import MambaForImageClassification
 
 def one_hot(y_):
     y_ = y_.reshape(len(y_))
@@ -73,7 +74,11 @@ def fine_tune_hf(
                 config.window_size = window_size 
             model = model_loader(config)
         else:
-            if "vit" in model_path:
+            if "mamba" in model_path:
+                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
+                                                        image_size=image_size, 
+                                                        grid_layout=grid_layout)
+            elif "vit" in model_path:
                 model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
                                                         image_size=image_size, 
                                                         grid_layout=grid_layout)
@@ -468,6 +473,12 @@ if __name__ == "__main__":
     """prepare the model for sequence classification"""
     model = args.model
     model_loader = AutoModelForImageClassification
+    if model == "mamba": # default mamba
+        model_path = pass
+        model_loader = MambaForImageClassification
+        patch_size = pass
+        pretrained_data = "ImageNet-21k"
+        pretrained_size = 224
     if model == "vit": # default vit
         model_path = "google/vit-base-patch16-224-in21k"
         model_loader = ViTForImageClassification
