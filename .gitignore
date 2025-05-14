@@ -1,0 +1,6 @@
+# ignore Python virtual environment
+/mamba_its/bin/
+/mamba_its/include/
+/mamba_its/lib/
+/mamba_its/lib64/
+/mamba_its/pyvenv.cfg

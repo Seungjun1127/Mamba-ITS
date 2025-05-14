@@ -1,9 +1,0 @@
-# Mamba ITS 모델 기본 config 예시
-img_size: 224
-patch_size: 4
-num_channels: 3
-embed_dim: 96
-depths: [2, 2, 6, 2]
-use_local_ssm: true
-use_global_ssm: true
-window_interaction: true
