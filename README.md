@@ -4,8 +4,6 @@
 
 **Mamba-ITS** inherits the visualization strategy of ViTST and reconstructs the structural advantages of Swin Transformer (local window, hierarchical patch merging, inter-window interaction, etc.) with SSM (Mamba)-based modules. This next-generation time series-vision model targets the PAM (Patient Activity Monitoring) dataset, aiming to overcome the limitations of existing Transformer-based models by combining the intuitiveness of time series → image conversion with the theoretical strengths of SSM.
 
----
-
 ## Key Design Principles
 
 ### 1. Local + Global SSM Fusion
@@ -29,8 +27,6 @@
   - Intermediate global pooling & broadcast
   - Designs auxiliary paths for information flow between distant tokens
 
----
-
 ## Goals & Research Significance
 
 1. **Maintain ViTST's Visualization Strategy**  
@@ -47,15 +43,11 @@
    - From "Why visualize as images?" to "What filters (kernels) capture patterns?"
    - Strengthens theoretical justification and interpretability
 
----
-
 ## Dataset
 
 - **PAM (Patient Activity Monitoring)**
   - Converts time series data into line graph images as input
   - Provides data preprocessing, visualization pipeline, and augmentation
-
----
 
 ## Model Architecture
 
@@ -76,8 +68,6 @@ Shifted SSM, Global Pooling, etc.
    ↓
 Classification Head
 ```
-
----
 
 ## Installation & Usage
 
@@ -101,26 +91,18 @@ pip install -r requirements.txt
 TBD
 ```
 
----
-
 ## References
 
 - [Time Series as Images: Vision Transformer for Irregularly Sampled Time Series](https://arxiv.org/abs/2303.12799)
 - [MambaVision: A Hybrid Mamba-Transformer Vision Backbone](https://arxiv.org/abs/2407.08083)
-
----
 
 ## Contribution & Contact
 
 - Pull requests and issues are welcome
 - For research collaboration and inquiries: tmdwns1127@kaist.ac.kr
 
----
-
 ## License
 
 - MIT License
-
----
 
 ### ✨ The starting point for next-generation time series-vision model research that captures both mathematical interpretability and practical performance!
