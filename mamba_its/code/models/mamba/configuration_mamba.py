@@ -1,5 +1,6 @@
 """mambaVision model configuration"""
 
+from transformers.utils import logging
 from transformers import PretrainedConfig
 
 class MambaConfig(PretrainedConfig):
