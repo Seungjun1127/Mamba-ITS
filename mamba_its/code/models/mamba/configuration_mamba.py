@@ -9,6 +9,7 @@ MAMBA_PRETRAINED_CONFIG_ARCHIVE_MAP = {
     ),
     # See all Swin models at https://huggingface.co/models?filter=mambaVision
 }
+
 class MambaConfig(PretrainedConfig):
     model_type = "mamba"
 
