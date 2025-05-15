@@ -25,10 +25,10 @@ from evaluate import load as load_metric
 from datasets import load_dataset
 from datasets import Dataset, Image
 
-from Vision.load_data import get_data_split 
-from models.vit.modeling_vit import ViTForImageClassification
-from models.swin.modeling_swin import SwinForImageClassification
-from models.mamba.modeling_mamba import MambaForImageClassification
+from .load_data import get_data_split 
+from ..models.vit.modeling_vit import ViTForImageClassification
+from ..models.swin.modeling_swin import SwinForImageClassification
+from ..models.mamba.modeling_mamba import MambaForImageClassification
 
 def one_hot(y_):
     y_ = y_.reshape(len(y_))
@@ -405,72 +405,6 @@ if __name__ == "__main__":
         grid_layout = (4, 5)
         image_size = (256, 320)
         epochs = 20
-    elif dataset == 'EthanolConcentration':
-        base_path = '../../dataset/TSRAdata/Classification/EthanolConcentration'
-        num_classes = 4
-        image_size = 256
-        grid_layout = 2
-    elif dataset == 'Heartbeat':
-        base_path = '../../dataset/TSRAdata/Classification/Heartbeat'
-        num_classes = 2
-        image_size = 384
-        grid_layout = 8
-    elif dataset == 'SpokenArabicDigits':
-        base_path = '../../dataset/TSRAdata/Classification/SpokenArabicDigits'
-        num_classes = 10
-        image_size = 256
-        grid_layout = 4
-    elif dataset == 'SelfRegulationSCP1':
-        base_path = '../../dataset/TSRAdata/Classification/SelfRegulationSCP1'
-        num_classes = 2
-        image_size = (256,384)
-        grid_layout = (2,3)
-    elif dataset == 'SelfRegulationSCP2':
-        base_path = '../../dataset/TSRAdata/Classification/SelfRegulationSCP2'
-        num_classes = 2
-        image_size = 384
-        grid_layout = 3
-    elif dataset == 'Handwriting':
-        base_path = '../../dataset/TSRAdata/Classification/Handwriting'
-        num_classes = 26
-        image_size = 256
-        grid_layout = 2
-    elif dataset == 'JapaneseVowels':
-        base_path = '../../dataset/TSRAdata/Classification/JapaneseVowels'
-        num_classes = 9
-        image_size = (224,224)
-        grid_layout = (4,4)
-    elif dataset == 'UWaveGestureLibrary':
-        base_path = '../../dataset/TSRAdata/Classification/UWaveGestureLibrary'
-        num_classes = 8
-        image_size = 256
-        grid_layout = 2
-    elif dataset == 'FaceDetection':
-        base_path = '../../dataset/TSRAdata/Classification/FaceDetection'
-        num_classes = 2
-        grid_layout = 12
-        image_size = 384
-    elif dataset == 'PEMS-SF':
-        base_path = '../../dataset/TSRAdata/Classification/PEMS-SF'
-        num_classes = 7
-        grid_layout = 32
-        image_size = 384
-    elif dataset == 'EigenWorms':
-        base_path = '../../dataset/TSRAdata/Classification/EigenWorms'
-        num_classes = 5
-        grid_layout = (2,3)
-        image_size = (256, 384)
-    elif dataset == 'AppliancesEnergy':
-        base_path = '../../dataset/TSRAdata/Regression/AppliancesEnergy'
-        num_classes = 1
-        grid_layout = (5,5)
-        image_size = (224, 224)
-    elif dataset == 'IEEEPPG':
-        base_path = '../../dataset/TSRAdata/Regression/IEEEPPG'
-        num_classes = 1
-        grid_layout = (3,3)
-        image_size = (224, 224)
-
     """prepare the model for sequence classification"""
     model = args.model
     model_loader = AutoModelForImageClassification
