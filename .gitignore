@@ -1,3 +1,5 @@
 # ignore Python virtual environment
 /mamba_its_venv/
 /venv/
+/mamba_its/dataset/PAMdata/splits
+/mamba_its/dataset/PAMdata/processed_data

@@ -88,8 +88,11 @@ pip install -r requirements.txt
 ### 3. Training/Evaluation
 
 ```bash
-cd Mamba-ITS/mamba_its/code
-./Vision/imgcls_script.sh
+cd Mamba-ITS
+source venv/bin/activate
+
+cd mamba_its
+./code/Vision/imgcls_script.sh
 ```
 
 ## References
