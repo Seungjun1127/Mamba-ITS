@@ -1,2 +1,3 @@
 # ignore Python virtual environment
 /mamba_its_venv/
+/venv/

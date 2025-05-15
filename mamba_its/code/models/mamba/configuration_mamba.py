@@ -3,6 +3,12 @@
 from transformers.utils import logging
 from transformers import PretrainedConfig
 
+MAMBA_PRETRAINED_CONFIG_ARCHIVE_MAP = {
+    "nvidia/MambaVision-T-1K": (
+        "https://huggingface.co/nvidia/MambaVision-T-1K/blob/main/config.json"
+    ),
+    # See all Swin models at https://huggingface.co/models?filter=mambaVision
+}
 class MambaConfig(PretrainedConfig):
     model_type = "mamba"
 
