@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-
+# #!/usr/bin/env bash
+#
 # PAM
 for dataset_prefix in differ_interpolation_-*0.5_**1_4*5_256*320_
 do
@@ -17,5 +17,5 @@ CUDA_VISIBLE_DEVICES=0 python3 run_ImgCLS.py \
     --learning_rate 2e-5 \
     --n_runs 1 \
     --n_splits 5 \
-    --do_train
+    --do-train
 done

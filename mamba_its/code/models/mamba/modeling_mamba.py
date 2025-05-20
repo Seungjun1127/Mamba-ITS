@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
 
 from transformers.modeling_utils import PreTrainedModel
@@ -58,15 +59,99 @@ class MambaPatchEmbedding(nn.Module):
         x = self.norm(x)
         return x, (H, W)
 
-# SSM Block (Placeholder)
+class SelectiveScan(nn.Module):
+    def __init__(self, d_model, d_state=16, dropout=0.1):
+        super().__init__()
+        self.d_model = d_model
+        self.d_state = d_state
+        
+        # SSM parameters
+        self.A = nn.Parameter(torch.randn(d_model, d_state, d_state))
+        self.B = nn.Parameter(torch.randn(d_model, d_state, 1))
+        self.C = nn.Parameter(torch.randn(d_model, 1, d_state))
+        self.D = nn.Parameter(torch.randn(d_model, 1, 1))
+        
+        # Selective mechanism
+        self.selective_gate = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.Sigmoid()
+        )
+        
+        self.dropout = nn.Dropout(dropout)
+        self.norm = nn.LayerNorm(d_model)
+        
+    def forward(self, x):
+        # x: (B, L, D)
+        B, L, D = x.shape
+        
+        # Selective gating
+        gate = self.selective_gate(x)  # (B, L, D)
+        x = x * gate
+        
+        # Initialize state
+        state = torch.zeros(B, D, self.d_state, device=x.device)
+        
+        # Process sequence
+        outputs = []
+        for t in range(L):
+            # Update state
+            state = torch.matmul(state, self.A) + torch.matmul(x[:, t:t+1].transpose(1, 2), self.B)
+            # Compute output
+            output = torch.matmul(state, self.C.transpose(1, 2)) + self.D * x[:, t:t+1]
+            outputs.append(output)
+        
+        # Stack outputs
+        output = torch.cat(outputs, dim=1)  # (B, L, D)
+        
+        # Residual connection and normalization
+        output = self.norm(output + x)
+        output = self.dropout(output)
+        
+        return output
+
 class MambaSSMBlock(nn.Module):
     def __init__(self, config: MambaConfig):
         super().__init__()
-        self.linear = nn.Linear(config.hidden_size, config.hidden_size)
-        self.norm = nn.LayerNorm(config.hidden_size)
+        self.d_model = config.hidden_size
+        self.d_state = getattr(config, 'd_state', 16)
+        self.dropout = getattr(config, 'dropout', 0.1)
+        
+        # SSM layer
+        self.ssm = SelectiveScan(
+            d_model=self.d_model,
+            d_state=self.d_state,
+            dropout=self.dropout
+        )
+        
+        # Feed-forward network
+        self.ffn = nn.Sequential(
+            nn.Linear(self.d_model, 4 * self.d_model),
+            nn.GELU(),
+            nn.Dropout(self.dropout),
+            nn.Linear(4 * self.d_model, self.d_model),
+            nn.Dropout(self.dropout)
+        )
+        
+        # Layer normalization
+        self.norm1 = nn.LayerNorm(self.d_model)
+        self.norm2 = nn.LayerNorm(self.d_model)
+        
     def forward(self, x):
-        # x: (B, N, C)
-        return self.norm(self.linear(x))
+        # x: (B, L, D)
+        
+        # SSM block with residual connection
+        residual = x
+        x = self.norm1(x)
+        x = self.ssm(x)
+        x = residual + x
+        
+        # Feed-forward network with residual connection
+        residual = x
+        x = self.norm2(x)
+        x = self.ffn(x)
+        x = residual + x
+        
+        return x
 
 # Patch Merging (계층적 다운샘플링)
 class MambaPatchMerging(nn.Module):
@@ -106,26 +191,50 @@ class MambaModel(MambaPreTrainedModel):
         super().__init__(config)
         self.patch_embed = MambaPatchEmbedding(config)
         self.pos_embed = None  # 동적 생성
+        
+        # SSM layers with different state dimensions
         self.layers = nn.ModuleList([
             MambaSSMBlock(config) for _ in range(config.num_hidden_layers)
         ])
+        
         self.patch_merge = MambaPatchMerging(config.hidden_size, config.hidden_size * 2) if config.patch_merge else None
         self.norm = nn.LayerNorm(config.hidden_size * (2 if config.patch_merge else 1))
         self.pool = nn.AdaptiveAvgPool1d(1)
-
+        
+        # Initialize weights
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, module):
+        if isinstance(module, (nn.Linear, nn.Conv2d)):
+            nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.LayerNorm):
+            nn.init.ones_(module.weight)
+            nn.init.zeros_(module.bias)
+            
     def forward(self, pixel_values):
         x, (H, W) = self.patch_embed(pixel_values)
+        
+        # Dynamic positional encoding
         if self.pos_embed is None or self.pos_embed.row_embed.shape[1] != H or self.pos_embed.col_embed.shape[2] != W:
             self.pos_embed = Mamba2DPositionalEncoding(self.config, H, W).to(x.device)
         x = self.pos_embed(x, H, W)
+        
+        # Process through SSM layers
         for layer in self.layers:
             x = layer(x)
+            
+        # Optional patch merging
         if self.patch_merge is not None:
             x, (H, W) = self.patch_merge(x, H, W)
+            
         x = self.norm(x)
+        
         # Global average pooling
         x = x.transpose(1, 2)  # (B, C, N)
         x = self.pool(x).squeeze(-1)  # (B, C)
+        
         return x
 
 # Image Classification Head
@@ -134,7 +243,8 @@ class MambaForImageClassification(MambaPreTrainedModel):
         super().__init__(config)
         self.num_labels = config.num_classes
         self.mamba = MambaModel(config)
-        self.classifier = nn.Linear(self.mamba.norm.normalized_shape[0], self.num_labels)
+        # self.classifier = nn.Linear(self.mamba.norm.normalized_shape[0], self.num_labels)
+        self.classifier = nn.Linear(self.mamba.norm.normalized_shape[0], 8)
         self.post_init()
 
     def forward(
