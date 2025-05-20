@@ -3,6 +3,7 @@
 /venv/
 
 # ignore dataset
+/mamba_its/dataset/
 /mamba_its/dataset/PAMdata/splits/
 /mamba_its/dataset/PAMdata/processed_data/
 
@@ -10,4 +11,12 @@
 /mamba_its/code/Vision/wandb/
 /mamba_its/ckpt/
 
+# ignore large files
+*.safetensors
+*.pt
+*.npy
+*.mat
+
 /mambavisiontest/
+/ViTST/
+/MambaVision/
