@@ -100,7 +100,7 @@ class SelectiveScan(nn.Module):
             output = torch.matmul(state, self.C.transpose(1, 2)) + self.D * x[:, t:t+1]
             outputs.append(output)
         
-        # Stack outputs
+        # Stack outputsW
         output = torch.cat(outputs, dim=1)  # (B, L, D)
         
         # Residual connection and normalization
