@@ -1,0 +1,18 @@
+for dataset_prefix in /root/Mamba-ITS/mamba_its/dataset/PAMdata/processed_data/set_0.1_differ_interpolation_-*0.5_**1_4*5_256*320_
+do
+CUDA_VISIBLE_DEVICES=0 python3 -m run_ImgCLS \
+    --model mambavision\
+    --seed 1799 \
+    --output_dir  "/root/Mamba-ITS/mamba_its/ckpt/ImgCLS/differ_interpolation_-*0.5_**1_4*5_256*320_PAM_mambavision/split4"\
+    --save_total_limit 1 \
+    --dataset PAM \
+    --dataset_prefix $dataset_prefix \
+    --train_batch_size 30 \
+    --eval_batch_size 148 \
+    --logging_steps 20 \
+    --save_steps 20 \
+    --epochs 20 \
+    --learning_rate 2e-5 \
+    --n_runs 1 \
+    --n_splits 5 
+done 

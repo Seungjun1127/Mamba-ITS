@@ -1,0 +1,68 @@
+{
+  "os": "Linux-6.8.0-44-generic-x86_64-with-glibc2.39",
+  "python": "CPython 3.12.3",
+  "startedAt": "2025-05-16T14:10:45.158820Z",
+  "args": [
+    "--model",
+    "mambavision",
+    "--seed",
+    "1799",
+    "--save_total_limit",
+    "1",
+    "--dataset",
+    "PAM",
+    "--dataset_prefix",
+    "differ_interpolation_-*0.5_**1_4*5_256*320_",
+    "--train_batch_size",
+    "1",
+    "--eval_batch_size",
+    "128",
+    "--logging_steps",
+    "20",
+    "--save_steps",
+    "20",
+    "--epochs",
+    "20",
+    "--learning_rate",
+    "2e-5",
+    "--n_runs",
+    "1",
+    "--n_splits",
+    "5",
+    "--do_train"
+  ],
+  "program": "-m run_ImgCLS",
+  "git": {
+    "remote": "https://github.com/Seungjun1127/Mamba-ITS.git",
+    "commit": "269cdb13ee9add243937fe75c698f1086a76666c"
+  },
+  "root": "/root/Mamba-ITS/mamba_its/code/Vision",
+  "host": "cs470-10",
+  "executable": "/root/Mamba-ITS/venv/bin/python3",
+  "cpu_count": 4,
+  "cpu_count_logical": 4,
+  "gpu": "GRID A100D-10C",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "102888095744",
+      "used": "30422249472"
+    }
+  },
+  "memory": {
+    "total": "26256723968"
+  },
+  "cpu": {
+    "count": 4,
+    "countLogical": 4
+  },
+  "gpu_nvidia": [
+    {
+      "name": "GRID A100D-10C",
+      "memoryTotal": "10737418240",
+      "cudaCores": 6912,
+      "architecture": "Ampere"
+    }
+  ],
+  "cudaVersion": "12.4"
+}

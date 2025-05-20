@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, '/mnt/raid0/zekun/ViTST/code')
+sys.path.insert(0, '/root/Mamba-ITS/mamba_its/code')
 import os
 
 import argparse
@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 from typing import Dict, List, Optional, Set, Tuple, Union
 import time
-
+import psutil
 import torch
 from transformers import EarlyStoppingCallback, IntervalStrategy
 from transformers import AutoConfig, AutoFeatureExtractor, AutoModelForImageClassification, TrainingArguments, Trainer
@@ -25,10 +25,11 @@ from evaluate import load as load_metric
 from datasets import load_dataset
 from datasets import Dataset, Image
 
-from .load_data import get_data_split 
-from ..models.vit.modeling_vit import ViTForImageClassification
-from ..models.swin.modeling_swin import SwinForImageClassification
-from ..models.mamba.modeling_mamba import MambaForImageClassification
+from Vision.load_data import get_data_split 
+from models.vit.modeling_vit import ViTForImageClassification
+from models.swin.modeling_swin import SwinForImageClassification
+from models.mamba.modeling_mamba import MambaForImageClassification
+from datetime import datetime
 
 def one_hot(y_):
     y_ = y_.reshape(len(y_))
@@ -78,7 +79,8 @@ def fine_tune_hf(
             if "mamba" in model_path:
                 model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
                                                         image_size=image_size, 
-                                                        grid_layout=grid_layout)
+                                                        grid_layout=grid_layout, trust_remote_code=True)
+                print(model)
             elif "vit" in model_path:
                 model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
                                                         image_size=image_size, 
@@ -88,8 +90,8 @@ def fine_tune_hf(
                                                         image_size=image_size, 
                                                         grid_layout=grid_layout)
             else:
-                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True)
-        feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
+                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, trust_remote_code=True)
+        #feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
     else:
         # if not train, load the fine-tuned model saved in output_dir
         if os.path.exists(output_dir):
@@ -103,22 +105,23 @@ def fine_tune_hf(
 
             if latest_checkpoint_idx > 0 and os.path.exists(os.path.join(output_dir, f"checkpoint-{latest_checkpoint_idx}")):
                 ft_model_path = os.path.join(output_dir, f"checkpoint-{latest_checkpoint_idx}")
-                feature_extractor = AutoFeatureExtractor.from_pretrained(ft_model_path)
-                model = model_loader.from_pretrained(ft_model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
+                # feature_extractor = AutoFeatureExtractor.from_pretrained(ft_model_path)
+                model = model_loader.from_pretrained(ft_model_path, num_labels=num_classes, ignore_mismatched_sizes=True, trust_remote_code=True )
             else: # don't have a fine-tuned model
-                feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
+                #feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
                 if train_from_scratch:
                     config = AutoConfig.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
                     model = model_loader.from_config(config)
                 else:
-                    model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
+                    model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, trust_remote_code=True)
+                    # model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
         else:
-            feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
+            #feature_extractor = AutoFeatureExtractor.from_pretrained(model_path)
             if train_from_scratch:
                 config = AutoConfig.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
                 model = model_loader.from_config(config)
             else:
-                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, image_size=image_size, grid_layout=grid_layout)
+                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, grid_layout=grid_layout)
 
     # define evaluation metric
     def compute_metrics_binary(eval_pred):
@@ -174,7 +177,7 @@ def fine_tune_hf(
         return {"rmse": rmse, "mape": mape, "mae": mae}
 
     # define image transformation function
-    normalize = Normalize(mean=feature_extractor.image_mean, std=feature_extractor.image_std)
+#    normalize = Normalize(mean=feature_extractor.image_mean, std=feature_extractor.image_std)
     train_transforms = Compose(
             [   
                 # Resize(feature_extractor.size),
@@ -207,8 +210,11 @@ def fine_tune_hf(
 
     def collate_fn(examples):
         pixel_values = torch.stack([example["pixel_values"] for example in examples])
-        labels = torch.tensor([example["label"] for example in examples])
-        return {"pixel_values": pixel_values, "labels": labels}
+        #labels = torch.tensor([example["label"] for example in examples])
+        labels = torch.tensor([example["label"][0] for example in examples])
+        #print(labels)
+        #return {"pixel_values": pixel_values, "labels": labels}
+        return {"tensor": pixel_values, "labels": labels}
 
     # transform the dataset
     train_dataset.set_transform(preprocess_train)
@@ -228,6 +234,7 @@ def fine_tune_hf(
         compute_metrics = compute_metrics_multilabel
         best_metric = "accuracy"
 
+#    print(model)
     # training arguments
     training_args = TrainingArguments(
     output_dir=output_dir,          # output directory
@@ -256,12 +263,12 @@ def fine_tune_hf(
     training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
-    tokenizer=feature_extractor,
+    #tokenizer=feature_extractor,
     compute_metrics=compute_metrics,
     data_collator=collate_fn,
-    callbacks=[EarlyStoppingCallback(early_stopping_patience=5)] if load_best_model_at_end else None
+    #callbacks=[EarlyStoppingCallback(early_stopping_patience=5)] if load_best_model_at_end else None
+    callbacks= None
     )
-
     # training the model with Huggingface 🤗 trainer
     if do_train:
         start = time.time()
@@ -290,6 +297,15 @@ def fine_tune_hf(
     end = time.time()
     time_elapsed = end - start
     print('Total Time elapsed: %.3f secs' % (time_elapsed))
+    
+    # Calculate throughput (samples per second)
+    num_samples = len(test_dataset)
+    throughput = num_samples / time_elapsed
+    
+    # Calculate memory usage
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    memory_usage_mb = memory_info.rss / 1024 / 1024  # Convert to MB
     
     logits, labels = predictions.predictions, predictions.label_ids
     ypred = np.argmax(logits, axis=1)
@@ -320,7 +336,7 @@ def fine_tune_hf(
         aupr = average_precision_score(one_hot(labels), probs)
         rmse = mape = mae = 0.
 
-    return acc, precision, recall, F1, auc, aupr, rmse, mape, mae
+    return acc, precision, recall, F1, auc, aupr, rmse, mape, mae, throughput, memory_usage_mb
 
 
 if __name__ == "__main__":
@@ -369,6 +385,13 @@ if __name__ == "__main__":
     parser.add_argument('--train_from_scratch', action='store_true', help='whether to load a randomly initialized model')
     parser.add_argument('--finetune_mim', action='store_true')
     parser.add_argument('--finetune_mae', action='store_true')
+    
+    # memory optimization arguments
+    parser.add_argument('--gradient_checkpointing', action='store_true', help='enable gradient checkpointing to save memory')
+    parser.add_argument('--fp16', action='store_true', help='enable mixed precision training')
+    parser.add_argument('--gradient_accumulation_steps', type=int, default=1, help='number of steps to accumulate gradients')
+    parser.add_argument('--dataloader_num_workers', type=int, default=0, help='number of dataloader workers')
+    parser.add_argument('--dataloader_pin_memory', action='store_true', help='pin memory in dataloader')
 
     args = parser.parse_args()
 
@@ -408,6 +431,14 @@ if __name__ == "__main__":
     """prepare the model for sequence classification"""
     model = args.model
     model_loader = AutoModelForImageClassification
+    if model == "mambavisionB21K": 
+        model_path = "nvidia/MambaVision-B-21K" # TBD
+        pretrained_data = "ImageNet-21k"
+        pretrained_size = 224
+    if model == "mambavision": 
+        model_path = "nvidia/MambaVision-T-1K" # TBD
+        pretrained_data = "ImageNet-1k"
+        pretrained_size = 224
     if model == "mamba": # default mamba
         model_path = "pass" # TBD
         model_loader = MambaForImageClassification
@@ -457,6 +488,8 @@ if __name__ == "__main__":
         rmse_arr = np.zeros((n_splits, n_runs))
         mape_arr = np.zeros((n_splits, n_runs))
         mae_arr = np.zeros((n_splits, n_runs))
+        throughput_arr = np.zeros((n_splits, n_runs))
+        memory_usage_arr = np.zeros((n_splits, n_runs))
 
         for k in range(5):
 
@@ -470,7 +503,7 @@ if __name__ == "__main__":
             elif dataset == 'P19':
                 split_path = '/splits/phy19_split' + str(split_idx) + '_new.npy'
             elif dataset == 'PAM':
-                split_path = '/splits/PAM_split_' + str(split_idx) + '.npy'
+                split_path = '/splits/PAMAP2_split_' + str(split_idx) + '.npy'
             else:
                 split_path = '/splits/split_' + str(split_idx) + '.npy'
             
@@ -532,7 +565,7 @@ if __name__ == "__main__":
 
             for m in range(n_runs):
                 print('- - Run %d - -' % (m + 1))
-                acc, precision, recall, F1, auc, aupr, rmse, mape, mae = fine_tune_hf(
+                acc, precision, recall, F1, auc, aupr, rmse, mape, mae, throughput, memory_usage = fine_tune_hf(
                 model_path=model_path,
                 model_loader=model_loader,
                 output_dir=output_dir,
@@ -561,12 +594,13 @@ if __name__ == "__main__":
                 test_report = 'Testing: Precision = %.2f | Recall = %.2f | F1 = %.2f\n' % (precision * 100, recall * 100, F1 * 100)
                 test_report += 'Testing: AUROC = %.2f | AUPRC = %.2f | Accuracy = %.2f\n' % (auc * 100, aupr * 100, acc * 100)
                 test_report += 'Testing: RMSE = %.2f | MAPE = %.2f | MAE = %.2f\n' % (rmse, mape, mae)
+                test_report += 'Testing: Throughput = %.2f samples/sec | Memory Usage = %.2f MB\n' % (throughput, memory_usage)
                 print(test_report)
                 
                 if args.do_train: 
-                    result_path = "train_result.txt"
+                    result_path = f"train_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 else: 
-                    result_path = "test_result.txt"
+                    result_path = f"test_result_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                 with open(os.path.join(output_dir, result_path), "w+") as f:
                     f.write(test_report)
 
@@ -580,6 +614,8 @@ if __name__ == "__main__":
                 rmse_arr[k, m] = rmse
                 mape_arr[k, m] = mape
                 mae_arr[k, m] = mae
+                throughput_arr[k, m] = throughput
+                memory_usage_arr[k, m] = memory_usage
 
         # pick best performer for each split based on max AUROC
         if dataset == "PAM":
@@ -595,6 +631,8 @@ if __name__ == "__main__":
         rmse_vec = [rmse_arr[k, idx_max[k]] for k in range(n_splits)]
         mape_vec = [mape_arr[k, idx_max[k]] for k in range(n_splits)]
         mae_vec = [mae_arr[k, idx_max[k]] for k in range(n_splits)]
+        throughput_vec = [throughput_arr[k, idx_max[k]] for k in range(n_splits)]
+        memory_usage_vec = [memory_usage_arr[k, idx_max[k]] for k in range(n_splits)]
 
         mean_acc, std_acc = np.mean(acc_vec), np.std(acc_vec)
         mean_auprc, std_auprc = np.mean(auprc_vec), np.std(auprc_vec)
@@ -605,6 +643,8 @@ if __name__ == "__main__":
         mean_rmse, std_rmse = np.mean(rmse_vec), np.std(rmse_vec)
         mean_mape, std_mape = np.mean(mape_vec), np.std(mape_vec)
         mean_mae, std_mae = np.mean(mae_vec), np.std(mae_vec)
+        mean_throughput, std_throughput = np.mean(throughput_vec), np.std(throughput_vec)
+        mean_memory_usage, std_memory_usage = np.mean(memory_usage_vec), np.std(memory_usage_vec)
 
         # printing the report
         test_report = "missing ratio:{}\n".format(missing_ratios)
@@ -618,9 +658,12 @@ if __name__ == "__main__":
         test_report += 'RMSE          = %.1f +/- %.1f\n' % (mean_rmse, std_rmse)
         test_report += 'MAPE          = %.1f +/- %.1f\n' % (mean_mape, std_mape)
         test_report += 'MAE           = %.1f +/- %.1f\n' % (mean_mae, std_mae)
+        test_report += 'Throughput    = %.1f +/- %.1f samples/sec\n' % (mean_throughput, std_throughput)
+        test_report += 'Memory Usage  = %.1f +/- %.1f MB\n' % (mean_memory_usage, std_memory_usage)
         print(test_report)
 
-        with open(os.path.join(output_dir.split("split")[0], "test_result.txt"), "w+") as f:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        with open(os.path.join(output_dir.split("split")[0], f"test_result_{timestamp}.txt"), "w+") as f:
             f.write(test_report)
 
         if len(missing_ratios) > 1:

@@ -31,6 +31,7 @@ def load_image(Pdict_list, y, base_path, split_idx, dataset_prefix, missing_rati
         images_path.append(image_path)
 
     datadict = {"image": images_path, "label": labels}
+#    print(datadict)
     dataset = Dataset.from_dict(datadict).cast_column("image", Image())
     
     return dataset, datadict

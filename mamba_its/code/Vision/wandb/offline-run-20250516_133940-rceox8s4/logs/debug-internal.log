@@ -1,0 +1,15 @@
+{"time":"2025-05-16T13:39:40.167938539Z","level":"INFO","msg":"stream: starting","core version":"0.19.11","symlink path":"/root/Mamba-ITS/mamba_its/code/Vision/wandb/offline-run-20250516_133940-rceox8s4/logs/debug-core.log"}
+{"time":"2025-05-16T13:39:40.271315359Z","level":"WARN","msg":"GraphQL client is nil, skipping feature loading"}
+{"time":"2025-05-16T13:39:40.271517061Z","level":"INFO","msg":"created new stream","id":"rceox8s4"}
+{"time":"2025-05-16T13:39:40.271600296Z","level":"INFO","msg":"stream: started","id":"rceox8s4"}
+{"time":"2025-05-16T13:39:40.271804468Z","level":"INFO","msg":"writer: Do: started","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:40.272003985Z","level":"INFO","msg":"sender: started","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:40.272137807Z","level":"INFO","msg":"handler: started","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:40.281964403Z","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-05-16T13:39:42.28875344Z","level":"INFO","msg":"stream: closing","id":"rceox8s4"}
+{"time":"2025-05-16T13:39:42.288816928Z","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-05-16T13:39:42.289504057Z","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-05-16T13:39:42.289747746Z","level":"INFO","msg":"handler: closed","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:42.289765959Z","level":"INFO","msg":"writer: Close: closed","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:42.289849289Z","level":"INFO","msg":"sender: closed","stream_id":"rceox8s4"}
+{"time":"2025-05-16T13:39:42.289971355Z","level":"INFO","msg":"stream: closed","id":"rceox8s4"}
