@@ -18,6 +18,7 @@ from torchvision.transforms import (
     Compose,
     Normalize,
     ToTensor,
+    Resize,
 )
 
 from evaluate import load as load_metric
@@ -28,7 +29,7 @@ from datasets import Dataset, Image
 from Vision.load_data import get_data_split 
 from models.vit.modeling_vit import ViTForImageClassification
 from models.swin.modeling_swin import SwinForImageClassification
-from models.mamba.modeling_mamba import MambaForImageClassification
+# from models.mamba.modeling_mamba import MambaForImageClassification
 from datetime import datetime
 
 def one_hot(y_):
@@ -77,10 +78,7 @@ def fine_tune_hf(
             model = model_loader(config)
         else:
             if "mamba" in model_path:
-                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
-                                                        image_size=image_size, 
-                                                        grid_layout=grid_layout, trust_remote_code=True)
-                print(model)
+                model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, trust_remote_code=True)
             elif "vit" in model_path:
                 model = model_loader.from_pretrained(model_path, num_labels=num_classes, ignore_mismatched_sizes=True, 
                                                         image_size=image_size, 
@@ -161,8 +159,8 @@ def fine_tune_hf(
         denoms = np.sum(np.exp(predictions), axis=1).reshape((-1, 1))
         probs = np.exp(predictions) / denoms
 
-        auc = roc_auc_score(one_hot(labels), probs)
-        aupr = average_precision_score(one_hot(labels), probs)
+        auc = 0
+        aupr = 0
 
         return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1, "auroc": auc, "auprc": aupr}
     
@@ -183,6 +181,7 @@ def fine_tune_hf(
                 # Resize(feature_extractor.size),
                 # RandomResizedCrop(feature_extractor.size),
                 # CenterCrop(feature_extractor.size),
+                Resize((224, 224)),
                 ToTensor(),
                 # normalize,
             ]
@@ -191,6 +190,7 @@ def fine_tune_hf(
             [
                 # Resize(feature_extractor.size),
                 # CenterCrop(feature_extractor.size),
+                Resize((224, 224)),
                 ToTensor(),
                 # normalize,
             ]
@@ -213,7 +213,7 @@ def fine_tune_hf(
         #labels = torch.tensor([example["label"] for example in examples])
         labels = torch.tensor([example["label"][0] for example in examples])
         #print(labels)
-        #return {"pixel_values": pixel_values, "labels": labels}
+        # return {"pixel_values": pixel_values, "labels": labels}
         return {"tensor": pixel_values, "labels": labels}
 
     # transform the dataset
@@ -302,10 +302,12 @@ def fine_tune_hf(
     num_samples = len(test_dataset)
     throughput = num_samples / time_elapsed
     
-    # Calculate memory usage
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    memory_usage_mb = memory_info.rss / 1024 / 1024  # Convert to MB
+    # Calculate GPU memory usage
+    if torch.cuda.is_available():
+        gpu_memory_usage_mb = torch.cuda.max_memory_allocated() / 1024 / 1024  # Convert to MB
+        torch.cuda.empty_cache()
+    else:
+        gpu_memory_usage_mb = 0.0
     
     logits, labels = predictions.predictions, predictions.label_ids
     ypred = np.argmax(logits, axis=1)
@@ -331,12 +333,12 @@ def fine_tune_hf(
         acc = np.sum(labels.ravel() == ypred.ravel()) / labels.shape[0]
         precision = precision_score(labels, ypred, average="macro")
         recall = recall_score(labels, ypred, average="macro") 
+        auc = 0
+        aupr = 0
         F1 = f1_score(labels, ypred, average="macro")
-        auc = roc_auc_score(one_hot(labels), probs)
-        aupr = average_precision_score(one_hot(labels), probs)
         rmse = mape = mae = 0.
 
-    return acc, precision, recall, F1, auc, aupr, rmse, mape, mae, throughput, memory_usage_mb
+    return acc, precision, recall, F1, auc, aupr, rmse, mape, mae, throughput, gpu_memory_usage_mb
 
 
 if __name__ == "__main__":
@@ -435,13 +437,13 @@ if __name__ == "__main__":
         model_path = "nvidia/MambaVision-B-21K" # TBD
         pretrained_data = "ImageNet-21k"
         pretrained_size = 224
-    if model == "mambavision": 
+    if model == "nvidia/MambaVision-T-1K": 
         model_path = "nvidia/MambaVision-T-1K" # TBD
+        model_loader = MambaForImageClassification
         pretrained_data = "ImageNet-1k"
         pretrained_size = 224
     if model == "mamba": # default mamba
         model_path = "pass" # TBD
-        model_loader = MambaForImageClassification
         patch_size = 16 # TBD
         pretrained_data = "ImageNet-21k"
         pretrained_size = 224
@@ -454,14 +456,14 @@ if __name__ == "__main__":
     elif model == "swin": # default swin
         model_path = "microsoft/swin-base-patch4-window7-224-in22k"
         model_loader = SwinForImageClassification
-        patch_size = 4
+        patch_size = 16
         pretrained_data = "ImageNet-21k"
         pretrained_size = 224
     elif model == "resnet":
         model_path = "microsoft/resnet-50"
         pretrained_data = "ImageNet-1k"
         pretrained_size = 224
-
+        
     feature_removal_level = args.feature_removal_level  # 'set' for fixed, 'sample' for random sample
     print(feature_removal_level)
 
@@ -592,8 +594,7 @@ if __name__ == "__main__":
                 )
 
                 test_report = 'Testing: Precision = %.2f | Recall = %.2f | F1 = %.2f\n' % (precision * 100, recall * 100, F1 * 100)
-                test_report += 'Testing: AUROC = %.2f | AUPRC = %.2f | Accuracy = %.2f\n' % (auc * 100, aupr * 100, acc * 100)
-                test_report += 'Testing: RMSE = %.2f | MAPE = %.2f | MAE = %.2f\n' % (rmse, mape, mae)
+                test_report += 'Testing: AUROC = %.2f | AUPRC = %.2f | Accuracy = %.2f\n' % (0, 0, acc * 100)
                 test_report += 'Testing: Throughput = %.2f samples/sec | Memory Usage = %.2f MB\n' % (throughput, memory_usage)
                 print(test_report)
                 

@@ -25,6 +25,9 @@ export PYTORCH_CUDA_ALLOC_CONF="max_split_size_mb:512"
 #     --do_train
 # done
 
+        #--withmissingratio WITHMISSINGRATIO \
+        
+	#--feature_removal_level set \
 #    --output_dir  "/root/Mamba-ITS/mamba_its/
 
 for dataset_prefix in differ_interpolation_-*0.5_**1_4*5_256*320_
@@ -35,15 +38,13 @@ do
 
     # 스크립트 실행
     CUDA_VISIBLE_DEVICES=0 python3 -m run_ImgCLS \
-        --withmissingratio WITHMISSINGRATIO \
-        --feature_removal_level set \
         --model mambavisionB21K \
         --seed 1799 \
         --save_total_limit 1 \
         --dataset PAM \
         --dataset_prefix $dataset_prefix \
-        --train_batch_size 4 \
-        --eval_batch_size 8 \
+        --train_batch_size 30 \
+        --eval_batch_size 148 \
         --logging_steps 20 \
         --save_steps 20 \
         --epochs 20 \
@@ -52,6 +53,6 @@ do
         --n_splits 5 \
         --gradient_checkpointing \
         --fp16 \
-        --gradient_accumulation_steps 8 \
-        --do_train
+        --gradient_accumulation_steps 8\
+	--do_train
 done 
