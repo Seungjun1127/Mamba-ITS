@@ -78,7 +78,7 @@ The initial run of `imgcls_script.sh` may fail due to bugs in the MambaVision co
    ```
 2. Make the following changes:
    - Replace `torch.nn.cross_entropy` with `torch.nn.functional.cross_entropy`.
-   - Update all instances of `num_head=1000` to `num_head=8`.
+   - Update all instances of `num_classes` to 8 instead of 1000.
 3. Re-run `imgcls_script.sh`.
 
 ---
