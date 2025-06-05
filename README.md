@@ -1,74 +1,106 @@
-# Mamba-ITS: Next-Generation Time Series-Vision Model with SSM
+# 🌟 Mamba-ITS: Next-Generation Time Series-Vision Model with SSM
 
-## Project Overview
+**Mamba-ITS** visualization strategy of ViTST and efficiency of MambaVision. This next-generation time series-vision model targets the PAM (Patient Activity Monitoring) dataset, aiming to overcome the limitations of existing Transformer-based models by combining the intuitiveness of time series → image conversion with the theoretical strengths of SSM.
 
-**Mamba-ITS** inherits the visualization strategy of ViTST and reconstructs the structural advantages of Swin Transformer (local window, hierarchical patch merging, inter-window interaction, etc.) with SSM (Mamba)-based modules. This next-generation time series-vision model targets the PAM (Patient Activity Monitoring) dataset, aiming to overcome the limitations of existing Transformer-based models by combining the intuitiveness of time series → image conversion with the theoretical strengths of SSM.
+---
 
-## Dataset
+## 📋 Project Overview
 
-- **PAM (Patient Activity Monitoring)**
-  - Converts time series data into line graph images as input
-  - Provides data preprocessing, visualization pipeline, and augmentation
+Mamba-ITS leverages the power of SSM to deliver a robust and interpretable solution for time series analysis. By converting time series data into visual representations, it enables seamless integration with vision-based models, achieving both mathematical rigor and practical performance.
 
-## Installation & Usage
+---
+
+## 📊 Dataset
+
+### PAM (Patient Activity Monitoring)
+- **Input**: Time series data transformed into line graph images.
+- **Features**:
+  - Comprehensive data preprocessing pipeline.
+  - Visualization and augmentation tools for enhanced model training.
+
+---
+
+## 🛠️ Installation & Usage
 
 ### 1. Environment Setup
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/Seungjun1127/Mamba-ITS.git
 cd Mamba-ITS
-# (Virtual environment recommended)
+# Recommended: Use a virtual environment
 pip install -r requirements.txt
 ```
 
 ### 2. Data Preparation
+Follow these steps to prepare the PAM dataset:
 
-- Run mamba_its/dataset/RF_information_gain.py
-- Download preprocessed PAM dataset: https://figshare.com/articles/dataset/PAM_dataset_for_Raindrop/19514347/1?file=34683103
-- Place /processed_data, /splits from downloaded dataset into mamba_its/dataset/PAMdata. 
-- Directories mamba_its/dataset/PAMdata/process_scripts, mamba_its/dataset/PAMdata/processed_data, and mamba_its/dataset/PAMdata/splits must be now present.
-- Run /mamba_its/dataset/PAMdata/process_scripts/ConstructDataset.py
+1. Run the initial preprocessing script:
+   ```bash
+   python mamba_its/dataset/RF_information_gain.py
+   ```
+2. Download the preprocessed PAM dataset from [Figshare](https://figshare.com/articles/dataset/PAM_dataset_for_Raindrop/19514347/1?file=34683103).
+3. Extract and place `/processed_data` and `/splits` into `mamba_its/dataset/PAMdata/`.
+4. Ensure the following directories exist:
+   - `mamba_its/dataset/PAMdata/process_scripts/`
+   - `mamba_its/dataset/PAMdata/processed_data/`
+   - `mamba_its/dataset/PAMdata/splits/`
+5. Construct the dataset:
+   ```bash
+   python mamba_its/dataset/PAMdata/process_scripts/ConstructDataset.py
+   ```
 
-### 3. Training/Evaluation
+### 3. Training & Evaluation
 
-For training + evaluation on base dataset,
+#### Base Dataset
+To train and evaluate on the base dataset:
+
 ```bash
 cd Mamba-ITS
 source venv/bin/activate
-
 cd mamba_its
-sh ./code/Vision/imgcls_script.sh
+bash ./code/Vision/imgcls_script.sh
 ```
 
-For evaluation on leave-sensors-out dataset after training,
+#### Leave-Sensors-Out Dataset
+For evaluation on the leave-sensors-out dataset after training:
 
 ```bash
-sh ./code/Vision/imgcls_script_leave_sensors_out.sh
+bash ./code/Vision/imgcls_script_leave_sensors_out.sh
 ```
 
-Note: there are bugs in the MambaVision code that need manual fixing. 
-The initial execution of imgcls_script.sh will return an error. Afterwards, go to 
-root/.cache/huggingface/modules/transformers_modules/nvidia/MambaVision-B-21K/bfe552a588f9f250ea0583951ea4dd5a10a198f8/modelling_mambavision.py
-or similar cache folder with the cached MambaVision model file. 
+#### 🐞 Bug Fix for MambaVision
+The initial run of `imgcls_script.sh` may fail due to bugs in the MambaVision code. To resolve:
 
-Change 
-torch.nn.cross_entropy to torch.nn.functional.cross_entropy
-And change all instances of num_head=1000 to num_head=8.
+1. Locate the cached MambaVision model file, typically at:
+   ```
+   root/.cache/huggingface/modules/transformers_modules/nvidia/MambaVision-B-21K/bfe552a588f9f250ea0583951ea4dd5a10a198f8/modelling_mambavision.py
+   ```
+2. Make the following changes:
+   - Replace `torch.nn.cross_entropy` with `torch.nn.functional.cross_entropy`.
+   - Update all instances of `num_head=1000` to `num_head=8`.
+3. Re-run `imgcls_script.sh`.
 
-Run imgcls_script.sh again as per normal to start training. 
+---
 
-## References
+## 📚 References
 
 - [Time Series as Images: Vision Transformer for Irregularly Sampled Time Series](https://arxiv.org/abs/2303.12799)
 - [MambaVision: A Hybrid Mamba-Transformer Vision Backbone](https://arxiv.org/abs/2407.08083)
 
-## Contribution & Contact
+---
 
-- Pull requests and issues are welcome
-- For research collaboration and inquiries: tmdwns1127@kaist.ac.kr
+## 🤝 Contribution & Contact
 
-## License
+- **Contributions**: Pull requests and issues are warmly welcomed!
+- **Contact**: For research collaboration or inquiries, reach out at [tmdwns1127@kaist.ac.kr](mailto:tmdwns1127@kaist.ac.kr).
 
-- MIT License
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
 
 ### ✨ The starting point for next-generation time series-vision model research that captures both mathematical interpretability and practical performance!
