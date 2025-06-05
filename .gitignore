@@ -3,9 +3,12 @@
 /venv/
 
 # ignore dataset
-/mamba_its/dataset/
-/mamba_its/dataset/PAMdata/splits/
-/mamba_its/dataset/PAMdata/processed_data/
+/mamba_its/dataset/P12data
+/mamba_its/dataset/P19data
+/mamba_its/dataset/PAMdata/processed_data/*
+/mamba_its/dataset/PAMdata/splits/*
+/mamba_its/dataset/TSRAdata
+/mamba_its/dataset/raindrop
 
 # ignore log
 /mamba_its/code/Vision/wandb/

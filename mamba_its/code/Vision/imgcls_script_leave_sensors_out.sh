@@ -27,7 +27,6 @@ do
         --gradient_checkpointing \
         --fp16 \
         --gradient_accumulation_steps 8\
-	--do_train
-        #--withmissingratio WITHMISSINGRATIO \
-	#--feature_removal_level set \
+        --withmissingratio WITHMISSINGRATIO \
+	--feature_removal_level set 
 done 
